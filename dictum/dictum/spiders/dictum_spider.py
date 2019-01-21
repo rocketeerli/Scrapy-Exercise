@@ -5,13 +5,18 @@ import scrapy
 class DictumSpiderSpider(scrapy.Spider):
     name = 'dictum_spider'    # 蜘蛛名
 
-    def start_requests(self): #由此方法通过下面链接爬取页面
-        urls = [ #爬取的链接
-            'http://lab.scrapyd.cn/page/1/',
-            'http://lab.scrapyd.cn/page/2/'
-        ]
-        for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse)  # 爬取到的页面如何处理？提交给parse方法处理
+    start_urls = [  # 另外一种写法，无需定义start_requests方法
+        'http://lab.scrapyd.cn/page/1/',
+        'http://lab.scrapyd.cn/page/2/'
+    ]
+
+    # def start_requests(self): #由此方法通过下面链接爬取页面
+    #     urls = [ #爬取的链接
+    #         'http://lab.scrapyd.cn/page/1/',
+    #         'http://lab.scrapyd.cn/page/2/'
+    #     ]
+    #     for url in urls:
+    #         yield scrapy.Request(url=url, callback=self.parse)  # 爬取到的页面如何处理？提交给parse方法处理
 
     def parse(self, response):
         """
