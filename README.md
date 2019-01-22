@@ -76,7 +76,7 @@ Scrapy 爬虫练习
 	cd .\meiju_new100\
 	scrapy genspider meiju meijutt.com
 	
-定义数据结构：
+定义数据结构，编辑 items.py，添加下面这个类：
 
 	class MeijuItem(scrapy.Item):
 		rank = scrapy.Field()
@@ -120,5 +120,124 @@ Scrapy 爬虫练习
 
 	scrapy crawl meiju
 	
+# 三、爬取校花网（http://www.xiaohuar.com/list-1-1.html）
 
+参考文章：[Scrapy简单入门及实例讲解](https://www.cnblogs.com/kongzhagen/p/6549053.html)
+
+创建工程：
+
+	scrapy startproject xiaohua_picture
 	
+创建爬虫：
+
+	cd .\xiaohua_picture\
+	scrapy genspider xiaohua xiaohuar.com
+
+定义数据结构，编辑 items.py，更改类为：
+
+	class XiaohuaPictureItem(scrapy.Item):
+		addr = scrapy.Field()
+		name = scrapy.Field()
+		
+编写爬虫：
+
+	# -*- coding: utf-8 -*-
+	import scrapy
+	from ..items import XiaohuaPictureItem
+	
+	class XiaohuaSpider(scrapy.Spider):
+		# 爬虫名称，唯一
+		name = 'xiaohua'
+		# 允许访问的域
+		allowed_domains = ['xiaohuar.com']
+		# 初始URL
+		start_urls = ['http://www.xiaohuar.com/list-1-1.html']
+	
+		def parse(self, response):
+			# 获取所有图片的 a 标签
+			all_pics = response.xpath('//div[@class="item_t"]')
+			for pic in all_pics:
+				# 分别处理每个图片，取出名称和地址
+				item = XiaohuaPictureItem()
+				name = pic.xpath('./div[@class="title"]/span/a/text()').extract()[0]
+				addr = pic.xpath('./div[@class="img"]/a/img/@src').extract()[0]
+				addr = 'http://www.xiaohuar.com' + addr
+				item['name'] = name
+				item['addr'] = addr
+				yield item
+
+设置配置文件，编辑 settings.py ，添加：
+
+	ITEM_PIPELINES = {
+		'xiaohua_picture.pipelines.XiaohuaPicturePipeline':100
+	}
+					
+编写数据处理脚本，编辑 pipelines.py ：
+	# -*- coding: utf-8 -*-
+	import urllib.request
+	import os
+	
+	class XiaohuaPicturePipeline(object):
+		def process_item(self, item, spider):
+			headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101 Firefox/52.0'}
+			req = urllib.request.Request(url=item['addr'],headers=headers)
+			res = urllib.request.urlopen(req)
+			file_name = os.path.join(r'F:\xiaohua-pictures',item['name']+'.jpg')
+			with open(file_name,'wb') as fp:
+				fp.write(res.read())
+
+运行爬虫：
+
+	scrapy crawl xiaohua
+
+修改爬虫文件，获取所有的校花图片，修改 xiaohua.py ：
+
+	# -*- coding: utf-8 -*-
+	import scrapy
+	from ..items import XiaohuaPictureItem
+	
+	class XiaohuaSpider(scrapy.Spider):
+		# 爬虫名称，唯一
+		name = 'xiaohua'
+		# 允许访问的域
+		allowed_domains = ['xiaohuar.com']
+		# 初始URL
+		start_urls = ['http://www.xiaohuar.com/list-1-1.html']
+		# 设置一个空集合
+		url_set = set()
+	
+		def parse(self, response):
+		# 设置一个空集合
+		url_set = set()
+	
+		def parse(self, response):
+			if response.url.startswith("http://www.xiaohuar.com/list-"):
+				# 获取所有图片的 a 标签
+				all_pics = response.xpath('//div[@class="item_t"]')
+				for pic in all_pics:
+					# 分别处理每个图片，取出名称和地址
+					item = XiaohuaPictureItem()
+					name = pic.xpath('./div[@class="title"]/span/a/text()').extract()[0]
+					addr = pic.xpath('./div[@class="img"]/a/img/@src').extract()[0]
+					addr = 'http://www.xiaohuar.com' + addr
+					item['name'] = name
+					item['addr'] = addr
+					yield item
+			# 获取所有的地址链接
+			urls = response.xpath("//a/@href").extract()
+			for url in urls:
+				# 如果地址以http://www.xiaohuar.com/list-开头且不在集合中，则获取其信息
+				if url.startswith("http://www.xiaohuar.com/list-"):
+					if url in XiaohuaSpider.url_set:
+						pass
+					else:
+						XiaohuaSpider.url_set.add(url)
+						yield scrapy.Request(url, callback=self.parse)
+						# yield self.make_requests_from_url(url) # 该函数已被弃用
+				else:
+					pass
+
+运行爬虫：
+
+	scrapy crawl xiaohua
+					
