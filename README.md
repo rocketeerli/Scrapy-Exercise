@@ -67,22 +67,22 @@ Scrapy 爬虫练习
 
 参考文章：[Scrapy简单入门及实例讲解](https://www.cnblogs.com/kongzhagen/p/6549053.html)
 
-创建工程：
+### 创建工程：
 
 	scrapy startproject meiju_new100
 
-创建爬虫程序：
+### 创建爬虫程序：
 
 	cd .\meiju_new100\
 	scrapy genspider meiju meijutt.com
 	
-定义数据结构，编辑 items.py，添加下面这个类：
+### 定义数据结构，编辑 items.py，添加下面这个类：
 
 	class MeijuItem(scrapy.Item):
 		rank = scrapy.Field()
 		name = scrapy.Field()
 
-编写爬虫，编辑 meiju.py ：
+### 编写爬虫，编辑 meiju.py ：
 
 	# -*- coding: utf-8 -*-
 	import scrapy
@@ -103,20 +103,20 @@ Scrapy 爬虫练习
 				rank = rank + 1
 				yield item
 
-设置配置文件，编辑 settings.py ，添加：
+### 设置配置文件，编辑 settings.py ，添加：
 
 	ITEM_PIPELINES = {
 		'meiju_new100.pipelines.MeijuNew100Pipeline':100
 	}
 
-编写数据处理脚本，编辑 pipelines.py ，将数据写入文件：
+### 编写数据处理脚本，编辑 pipelines.py ，将数据写入文件：
 
 	class MeijuNew100Pipeline(object):
 		def process_item(self, item, spider):
 			with open("meiju.txt",'a') as fp:
 				fp.write(item['rank'] + '\t' + item['name'] + '\n')
 				
-执行爬虫：
+### 执行爬虫：
 
 	scrapy crawl meiju
 	
@@ -124,22 +124,22 @@ Scrapy 爬虫练习
 
 参考文章：[Scrapy简单入门及实例讲解](https://www.cnblogs.com/kongzhagen/p/6549053.html)
 
-创建工程：
+### 创建工程：
 
 	scrapy startproject xiaohua_picture
 	
-创建爬虫：
+### 创建爬虫：
 
 	cd .\xiaohua_picture\
 	scrapy genspider xiaohua xiaohuar.com
 
-定义数据结构，编辑 items.py，更改类为：
+### 定义数据结构，编辑 items.py，更改类为：
 
 	class XiaohuaPictureItem(scrapy.Item):
 		addr = scrapy.Field()
 		name = scrapy.Field()
 		
-编写爬虫：
+### 编写爬虫：
 
 	# -*- coding: utf-8 -*-
 	import scrapy
@@ -166,13 +166,13 @@ Scrapy 爬虫练习
 				item['addr'] = addr
 				yield item
 
-设置配置文件，编辑 settings.py ，添加：
+### 设置配置文件，编辑 settings.py ，添加：
 
 	ITEM_PIPELINES = {
 		'xiaohua_picture.pipelines.XiaohuaPicturePipeline':100
 	}
 					
-编写数据处理脚本，编辑 pipelines.py ：
+### 编写数据处理脚本，编辑 pipelines.py ：
 	# -*- coding: utf-8 -*-
 	import urllib.request
 	import os
@@ -186,11 +186,13 @@ Scrapy 爬虫练习
 			with open(file_name,'wb') as fp:
 				fp.write(res.read())
 
-运行爬虫：
+### 运行爬虫：
 
 	scrapy crawl xiaohua
 
-修改爬虫文件，获取所有的校花图片，修改 xiaohua.py ：
+## 改进
+
+### 修改爬虫文件，获取所有的校花图片，修改 xiaohua.py ：
 
 	# -*- coding: utf-8 -*-
 	import scrapy
@@ -237,7 +239,60 @@ Scrapy 爬虫练习
 				else:
 					pass
 
-运行爬虫：
+### 运行爬虫：
 
 	scrapy crawl xiaohua
-					
+	
+# 四、爬取意大利新闻网站
+
+开始的步骤与上面一样，下面说几点不同的。
+
+### 将返回的 item 写入文件中
+
+编辑 pipelines.py 文件：
+
+	import json
+	class LastampaPipeline(object):
+		def process_item(self, item, spider):
+			with open('../lastampa-data/lastampa_it_' + spider.name + '.json', 'a', encoding='utf-8') as f:
+				f.write(json.dumps(dict(item), ensure_ascii=False)+'\n')
+				f.flush()
+	
+编辑 settings.py 文件，在设置中启用这个 pipeline：
+
+	# 调用 pipelines，写入文件
+	ITEM_PIPELINES = {
+		'lastampa.pipelines.LastampaPipeline':100
+	}
+	
+### 随机添加头部信息
+
+编辑 settings.py 文件，添加如下代码：
+
+	# 随机添加头部信息
+	USER_AGENT_LIST=[
+		'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
+		"Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3",
+		"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3",
+		"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)",
+		"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
+		"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3",
+		"Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.0 Safari/536.3",
+		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
+		"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24"
+	]
+	USER_AGENT = random.choice(USER_AGENT_LIST)
+	
+注意：**需要导入随机函数库：import random**
+
+### 运行爬虫：
+
+	cd .\lastampa\
+	cd .\lastampa\
+	scrapy crawl xxx
+
+注意：
+
+* **需要两次 cd，这样写入文件的路径才正确，如果路径不同，需要进行相应更改**（绝对路径请忽略这条）
+* **这里的 `xxx` 是蜘蛛文件的 `name`**
+
