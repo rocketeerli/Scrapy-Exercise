@@ -15,6 +15,12 @@ BOT_NAME = 'lastampa'
 SPIDER_MODULES = ['lastampa.spiders']
 NEWSPIDER_MODULE = 'lastampa.spiders'
 
+# 调用 pipelines，写入文件
+ITEM_PIPELINES = {
+    'lastampa.pipelines.LastampaPipeline':100
+}
+
+# 随机添加头部信息
 USER_AGENT_LIST=[
     'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36',
     "Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3",
